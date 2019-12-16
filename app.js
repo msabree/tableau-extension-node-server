@@ -10,11 +10,13 @@ const options = {
     type: 'application/octet-stream'
 };
 
+const WRITE_BACK_FILE_PATH = process.env.WRITE_BACK_FILE_PATH || 'Location Table - POC.xlsx';
+
 app.use(cors());
 app.use(bodyParser.raw(options));
 
 app.put('/writeback', (req, res) => {
-    fs.writeFile('Location Table - POC.xlsx', req.body, (err) => {
+    fs.writeFile(WRITE_BACK_FILE_PATH, req.body, (err) => {
         if(err){
             console.log(err);
             res.send('Write back failed!');
