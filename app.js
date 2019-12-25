@@ -4,7 +4,7 @@ const fs = require('fs');
 const bodyParser = require('body-parser');
 const {google} = require('googleapis');
 const app = express();
-const port = 8081;
+const port = process.env.PORT || 8081;
 const options = {
     inflate: true,
     limit: '500kb',
