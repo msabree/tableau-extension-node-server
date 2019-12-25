@@ -15,6 +15,8 @@ const options = {
 app.use(cors());
 app.use(bodyParser.raw(options));
 
+require('dotenv').config();
+
 const WRITE_BACK_FILE_NAME = process.env.WRITE_BACK_FILE_NAME || 'Location Table - POC.xlsx';
 let fileId = '';
 
@@ -25,12 +27,7 @@ const SCOPES = ['https://www.googleapis.com/auth/drive'];
 // time.
 const TOKEN_PATH = 'token.json';
 
-// Load client secrets from a local file.
-fs.readFile('credentials.json', (err, content) => {
-    if (err) return console.log('Error loading client secret file:', err);
-    // Authorize a client with credentials, then call the Google Drive API.
-    authorize(JSON.parse(content), listFiles);
-});
+authorize(JSON.parse(process.env.GOOGLE_CREDENTIALS), listFiles);
 
 /**
  * Create an OAuth2 client with the given credentials, and then execute the
