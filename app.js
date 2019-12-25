@@ -83,8 +83,8 @@ app.get('/', (req, res) => {
     authorize(JSON.parse(process.env.GOOGLE_CREDENTIALS), (auth) => {}, res);
 });
 
-app.get('/authorize', (req, res) => {
-    authorize(JSON.parse(process.env.GOOGLE_CREDENTIALS), (auth) => {}, res, req.query.code);
+app.get('/code/:code', (req, res) => {
+    authorize(JSON.parse(process.env.GOOGLE_CREDENTIALS), (auth) => {}, res, req.params.code);
 });
 
 app.put('/writeback', (req, res) => {
@@ -96,6 +96,7 @@ app.put('/writeback', (req, res) => {
         else{
             // Authorize a client with credentials, then call the Google Drive API.
             authorize(JSON.parse(process.env.GOOGLE_CREDENTIALS), (auth) => {
+                const drive = google.drive({version: 'v3', auth});
                 drive.files.list({
                     pageSize: 1000,
                     fields: 'nextPageToken, files(id, name)',
@@ -106,7 +107,6 @@ app.put('/writeback', (req, res) => {
                         files.map(async (file) => {   
                             if(file.name === WRITE_BACK_FILE_NAME){
                                 console.log(`${file.name} (${file.id})`);
-                                const drive = google.drive({version: 'v3', auth});
                                 const res = await drive.files.update({
                                     fileId: file.id,
                                     media: {
