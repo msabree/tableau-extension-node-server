@@ -20,10 +20,6 @@ const WRITE_BACK_FILE_NAME = process.env.WRITE_BACK_FILE_NAME || 'Location Table
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/drive'];
-// The file token.json stores the user's access and refresh tokens, and is
-// created automatically when the authorization flow completes for the first
-// time.
-const TOKEN_PATH = 'token.json';
 
 /**
  * Create an OAuth2 client with the given credentials, and then execute the
@@ -36,13 +32,20 @@ const TOKEN_PATH = 'token.json';
     const oAuth2Client = new google.auth.OAuth2(
         client_id, client_secret, redirect_uris[0]);
   
-    // Check if we have previously stored a token.
-    fs.readFile(TOKEN_PATH, (err, token) => {
-      if (err) return getAccessToken(oAuth2Client, callback, res, code);
-      oAuth2Client.setCredentials(JSON.parse(token));
-      callback(oAuth2Client);
-      res.send('App ready to go!')
-    });
+    // The GOOGLE_DRIVE_TOKEN stores the user's access and refresh tokens, and is
+    // created automatically when the authorization flow completes for the first
+    // time.
+    // Check if we have the env variable already set
+    // To reset you need to delete the env on heroku (or where ever you use to deploy server)
+    const googleDriveToken = process.env.GOOGLE_DRIVE_TOKEN;
+    if(googleDriveToken === '' || googleDriveToken === undefined) {
+        getAccessToken(oAuth2Client, callback, res, code);
+    }
+    else{
+        oAuth2Client.setCredentials(JSON.parse(googleDriveToken));
+        callback(oAuth2Client);
+        res.send('App ready to go!')
+    }
 }
   
 /**
@@ -67,13 +70,10 @@ function getAccessToken(oAuth2Client, callback, res = null, code = '') {
             }
             else{
                 oAuth2Client.setCredentials(token);
-                // Store the token to disk for later program executions
-                fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
-                    if (err) return console.error(err);
-                    console.log('Token stored to', TOKEN_PATH);
-                });
+                oAuth2Client.setCredentials(token);
                 callback(oAuth2Client);
-                res.send('All set!');
+                // This needs to get stored to an env variable for long term use on dynamic servers
+                res.send(JSON.stringify(token));
             }
         });
     }
@@ -83,8 +83,8 @@ app.get('/', (req, res) => {
     authorize(JSON.parse(process.env.GOOGLE_CREDENTIALS), (auth) => {}, res);
 });
 
-app.get('/code/:code', (req, res) => {
-    authorize(JSON.parse(process.env.GOOGLE_CREDENTIALS), (auth) => {}, res, req.params.code);
+app.get('/code', (req, res) => {
+    authorize(JSON.parse(process.env.GOOGLE_CREDENTIALS), (auth) => {}, res, req.query.code);
 });
 
 app.put('/writeback', (req, res) => {
